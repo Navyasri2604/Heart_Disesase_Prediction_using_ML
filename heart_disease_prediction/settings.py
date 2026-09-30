@@ -1,17 +1,41 @@
 """
 Django settings for Heart Disease Prediction project.
-Compatible with Django 2.2 / Python 3.7+
+
+Compatible with Django 3.2 / Python 3.7+
 """
+
 import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "hd-pred-dev-secret-key-change-in-production-xyz789")
-DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true"
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 
-# ─── Applications ────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# Security
+# ─────────────────────────────────────────────────────────────────────────────
+
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "hd-pred-dev-secret-key-change-in-production-xyz789"
+)
+
+DEBUG = os.getenv("DJANGO_DEBUG", "false").lower() == "true"
+
+# Render / local development
+ALLOWED_HOSTS = [
+    h.strip()
+    for h in os.getenv(
+        "DJANGO_ALLOWED_HOSTS",
+        "*"
+    ).split(",")
+    if h.strip()
+]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Applications
+# ─────────────────────────────────────────────────────────────────────────────
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -19,10 +43,16 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "accounts.apps.AccountsConfig",
     "prediction.apps.PredictionConfig",
     "dashboard.apps.DashboardConfig",
 ]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Middleware
+# ─────────────────────────────────────────────────────────────────────────────
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -34,25 +64,36 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# URLs / WSGI
+# ─────────────────────────────────────────────────────────────────────────────
+
 ROOT_URLCONF = "heart_disease_prediction.urls"
 
-TEMPLATES = [{
-    "BACKEND": "django.template.backends.django.DjangoTemplates",
-    "DIRS": [str(BASE_DIR / "templates")],
-    "APP_DIRS": True,
-    "OPTIONS": {
-        "context_processors": [
-            "django.template.context_processors.debug",
-            "django.template.context_processors.request",
-            "django.contrib.auth.context_processors.auth",
-            "django.contrib.messages.context_processors.messages",
-        ]
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [str(BASE_DIR / "templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
     },
-}]
+]
 
 WSGI_APPLICATION = "heart_disease_prediction.wsgi.application"
 
-# ─── Database ─────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Database
+# ─────────────────────────────────────────────────────────────────────────────
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -60,38 +101,118 @@ DATABASES = {
     }
 }
 
-# ─── Password Validation ──────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Password Validation
+# ─────────────────────────────────────────────────────────────────────────────
+
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "UserAttributeSimilarityValidator"
+        )
+    },
+    {
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "MinimumLengthValidator"
+        )
+    },
+    {
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "CommonPasswordValidator"
+        )
+    },
+    {
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "NumericPasswordValidator"
+        )
+    },
 ]
 
-# ─── Localisation ─────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Internationalization
+# ─────────────────────────────────────────────────────────────────────────────
+
 LANGUAGE_CODE = "en-us"
+
 TIME_ZONE = "UTC"
+
 USE_I18N = True
+
 USE_TZ = True
 
-# ─── Static & Media Files ────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Static Files
+# ─────────────────────────────────────────────────────────────────────────────
+
 STATIC_URL = "/static/"
+
 STATIC_ROOT = str(BASE_DIR / "staticfiles")
-STATICFILES_DIRS = [str(BASE_DIR / "static")]
+
+STATICFILES_DIRS = [
+    str(BASE_DIR / "static")
+]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Media Files
+# ─────────────────────────────────────────────────────────────────────────────
+
 MEDIA_URL = "/media/"
+
 MEDIA_ROOT = str(BASE_DIR / "media")
 
-# ─── Auth Settings ────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Authentication
+# ─────────────────────────────────────────────────────────────────────────────
+
 LOGIN_URL = "accounts:login"
+
 LOGIN_REDIRECT_URL = "dashboard:home"
+
 LOGOUT_REDIRECT_URL = "accounts:login"
 
-# ─── Security ─────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Security Settings
+# ─────────────────────────────────────────────────────────────────────────────
+
 SESSION_COOKIE_HTTPONLY = True
+
 CSRF_COOKIE_HTTPONLY = True
+
 SECURE_CONTENT_TYPE_NOSNIFF = True
+
 X_FRAME_OPTIONS = "DENY"
 
-# ML Model path (used by ml_service.py)
-ML_MODEL_PATH = str(BASE_DIR / "trained_model" / "heart_disease_model.joblib")
-ML_METRICS_PATH = str(BASE_DIR / "trained_model" / "metrics.json")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Render / HTTPS
+# ─────────────────────────────────────────────────────────────────────────────
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    SESSION_COOKIE_SECURE = True
+
+    CSRF_COOKIE_SECURE = True
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ML Model Paths
+# ─────────────────────────────────────────────────────────────────────────────
+
+ML_MODEL_PATH = str(
+    BASE_DIR / "trained_model" / "heart_disease_model.joblib"
+)
+
+ML_METRICS_PATH = str(
+    BASE_DIR / "trained_model" / "metrics.json"
+)
