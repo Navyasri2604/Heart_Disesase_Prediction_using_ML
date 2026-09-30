@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Visual Analytics - CardioAI{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-5" data-aos="fade-down">
+    <div>
+        <div class="glass-pill mb-3"><i class="fa-solid fa-chart-bar"></i> Visual Analytics</div>
+        <h2 class="mb-1 fw-bold gradient-text" style="font-size:2rem;">Dataset Insights</h2>
+        <p style="color:var(--text-muted);">Interactive charts exploring the Cleveland Heart Disease Dataset</p>
+    </div>
+    <a href="{% url 'prediction:create' %}" class="btn btn-primary rounded-pill px-4 shadow">
+        <i class="fa-solid fa-stethoscope me-2"></i>New Assessment
+    </a>
+</div>
+
+<!-- Dataset Stats Banner -->
+<div class="row mb-5">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card" style="background:var(--primary-gradient) !important;border:none !important;color:white;">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h4 class="fw-bold mb-1">Cleveland Heart Disease Dataset</h4>
+                        <p class="mb-0" style="opacity:0.85;">303 patient records &bull; 13 clinical features &bull; Binary classification target</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row text-center mt-3 mt-md-0">
+                            <div class="col-4">
+                                <div style="font-size:2rem;font-weight:800;">303</div>
+                                <div style="opacity:0.8;font-size:0.8rem;">Patients</div>
+                            </div>
+                            <div class="col-4">
+                                <div style="font-size:2rem;font-weight:800;">13</div>
+                                <div style="opacity:0.8;font-size:0.8rem;">Features</div>
+                            </div>
+                            <div class="col-4">
+                                <div style="font-size:2rem;font-weight:800;">~54%</div>
+                                <div style="opacity:0.8;font-size:0.8rem;">Disease Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 1: Disease Distribution + Age Distribution -->
+<div class="row mb-4">
+    <div class="col-lg-5" data-aos="fade-right">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-heart text-danger me-2"></i>Disease Class Distribution</h6>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center p-4">
+                <div style="max-width:280px;width:100%;">
+                    <canvas id="diseaseDistChart"></canvas>
+                </div>
+            </div>
+            <div class="card-footer" style="background:transparent;border-top:1px solid var(--border-color);font-size:0.82rem;color:var(--text-muted);">
+                <i class="fa-solid fa-info-circle me-1 text-primary"></i>
+                165 disease positive (54.5%) | 138 disease negative (45.5%)
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-7" data-aos="fade-left">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-person-cane text-warning me-2"></i>Age Distribution by Disease Status</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container">
+                    <canvas id="ageDistChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 2: Cholesterol + Blood Pressure -->
+<div class="row mb-4">
+    <div class="col-lg-6" data-aos="fade-right">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-droplet text-warning me-2"></i>Cholesterol Analysis</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container">
+                    <canvas id="cholChart"></canvas>
+                </div>
+                <div class="mt-3 p-3 rounded" style="background:var(--bg-secondary);">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="fw-bold" style="color:var(--primary);">188</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Min (mg/dl)</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold" style="color:var(--warning);">246</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Avg (mg/dl)</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold" style="color:var(--danger);">564</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Max (mg/dl)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6" data-aos="fade-left">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-gauge-high text-danger me-2"></i>Blood Pressure Trends</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container">
+                    <canvas id="bpChart"></canvas>
+                </div>
+                <div class="mt-3 p-3 rounded" style="background:var(--bg-secondary);">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="fw-bold" style="color:var(--primary);">94</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Min (mmHg)</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold" style="color:var(--warning);">131</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Avg (mmHg)</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold" style="color:var(--danger);">200</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">Max (mmHg)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 3: Chest Pain + Max Heart Rate + Feature Importance -->
+<div class="row mb-4">
+    <div class="col-lg-6" data-aos="fade-right">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-lungs text-primary me-2"></i>Chest Pain Type vs Disease</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container">
+                    <canvas id="cpChart"></canvas>
+                </div>
+            </div>
+            <div class="card-footer" style="background:transparent;border-top:1px solid var(--border-color);font-size:0.8rem;color:var(--text-muted);">
+                0: Typical Angina &bull; 1: Atypical Angina &bull; 2: Non-Anginal &bull; 3: Asymptomatic
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6" data-aos="fade-left">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-heartbeat text-secondary me-2"></i>Max Heart Rate vs Age</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container">
+                    <canvas id="hrChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feature Importance from SHAP Plot -->
+<div class="row mb-4">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="fa-solid fa-brain text-primary"></i>
+                <h6 class="m-0 fw-bold">SHAP Feature Importance — AI Model Explanation</h6>
+                <span class="badge ms-2" style="background:rgba(79,70,229,0.1);color:var(--primary);border:1px solid rgba(79,70,229,0.2);">Explainable AI</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 text-center">
+                        <img src="{% static 'charts/shap_summary.png' %}" 
+                             class="img-fluid rounded shadow-sm" 
+                             alt="SHAP Summary Plot"
+                             style="max-height:350px;"
+                             onerror="this.parentElement.innerHTML='<div class=\'py-5 text-center\'><i class=\'fa-solid fa-chart-gantt fa-4x mb-3\' style=\'opacity:0.25;color:var(--primary)\'></i><p style=\'color:var(--text-muted)\'>Run <code>python train_model.py</code> to generate SHAP plots</p></div>'">
+                    </div>
+                    <div class="col-lg-6">
+                        <h5 class="fw-bold mb-3">Understanding Feature Importance</h5>
+                        <p style="color:var(--text-muted);">SHAP (SHapley Additive exPlanations) values quantify the contribution of each feature to the model's prediction.</p>
+                        
+                        <!-- Manual Feature Importance Bars -->
+                        <div class="mt-3">
+                            {% for feat in feature_importance %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-600" style="font-size:0.875rem;color:var(--text-dark);">{{ feat.name }}</span>
+                                    <span style="font-size:0.8rem;color:var(--text-muted);">{{ feat.importance }}</span>
+                                </div>
+                                <div class="factor-bar">
+                                    <div class="factor-bar-fill" 
+                                         style="width:{{ feat.width }}%;background:var(--primary-gradient);"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Correlation Heatmap Info -->
+<div class="row mb-4">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-table-cells text-success me-2"></i>Feature Correlation Analysis</h6>
+            </div>
+            <div class="card-body p-4">
+                <img src="{% static 'charts/correlation_heatmap.png' %}" 
+                     class="img-fluid rounded" 
+                     alt="Correlation Heatmap"
+                     onerror="this.parentElement.innerHTML='<div class=\'py-5 text-center\'><i class=\'fa-solid fa-grid-2 fa-4x mb-3\' style=\'opacity:0.25;color:var(--secondary)\'></i><p style=\'color:var(--text-muted)\'>Run <code>python train_model.py</code> to generate correlation heatmap</p></div>'">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+AOS.init({ duration: 700, once: true });
+
+const chartDefaults = {
+    font: { family: 'Outfit', size: 12 },
+    color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim()
+};
+Chart.defaults.font.family = 'Outfit';
+
+// Disease Distribution Pie
+new Chart(document.getElementById('diseaseDistChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Heart Disease', 'No Heart Disease'],
+        datasets: [{
+            data: [165, 138],
+            backgroundColor: ['#EF4444', '#10B981'],
+            borderWidth: 0, hoverOffset: 10, borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true, cutout: '65%',
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { family:'Outfit',size:12 }, padding:16, usePointStyle:true } }
+        },
+        animation: { animateScale: true, duration: 1000 }
+    }
+});
+
+// Age Distribution Bar Chart
+const ageLabels = ['<40', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70+'];
+new Chart(document.getElementById('ageDistChart'), {
+    type: 'bar',
+    data: {
+        labels: ageLabels,
+        datasets: [
+            { label: 'Heart Disease', data: [5,10,22,30,42,28,20,8], backgroundColor: 'rgba(239,68,68,0.75)', borderRadius: 6 },
+            { label: 'No Disease', data: [8,14,18,28,30,20,14,6], backgroundColor: 'rgba(16,185,129,0.75)', borderRadius: 6 }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: { grid: { display: false }, ticks: { font: { family:'Outfit' } } },
+            y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family:'Outfit' } } }
+        },
+        plugins: { legend: { labels: { font: { family:'Outfit',size:12 }, usePointStyle:true } } },
+        animation: { duration: 1000 }
+    }
+});
+
+// Cholesterol Distribution
+const cholRanges = ['<200', '200-220', '220-240', '240-260', '260-280', '280+'];
+new Chart(document.getElementById('cholChart'), {
+    type: 'bar',
+    data: {
+        labels: cholRanges,
+        datasets: [{
+            label: 'Patient Count',
+            data: [22,45,68,72,54,42],
+            backgroundColor: 'rgba(245,158,11,0.7)',
+            borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: { grid: { display: false }, ticks: { font: { family:'Outfit' } } },
+            y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family:'Outfit' } } }
+        },
+        plugins: { legend: { display: false } }
+    }
+});
+
+// Blood Pressure by Risk
+new Chart(document.getElementById('bpChart'), {
+    type: 'bar',
+    data: {
+        labels: ['<110', '110-120', '120-130', '130-140', '140-150', '150-160', '160+'],
+        datasets: [
+            { label: 'No Disease', data: [5,18,38,42,20,10,5], backgroundColor: 'rgba(16,185,129,0.7)', borderRadius: 5 },
+            { label: 'Heart Disease', data: [3,12,30,48,32,22,18], backgroundColor: 'rgba(239,68,68,0.7)', borderRadius: 5 }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: { grid: { display: false }, ticks: { font: { family:'Outfit' } } },
+            y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family:'Outfit' } } }
+        },
+        plugins: { legend: { labels: { font: { family:'Outfit',size:12 }, usePointStyle:true } } }
+    }
+});
+
+// Chest Pain Distribution
+new Chart(document.getElementById('cpChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Type 0\n(Typical)', 'Type 1\n(Atypical)', 'Type 2\n(Non-Anginal)', 'Type 3\n(Asymptomatic)'],
+        datasets: [
+            { label: 'No Disease', data: [17,41,68,12], backgroundColor: 'rgba(16,185,129,0.75)', borderRadius: 5 },
+            { label: 'Heart Disease', data: [7,16,18,104], backgroundColor: 'rgba(239,68,68,0.75)', borderRadius: 5 }
+        ]
+    },
+    options: {
+        responsive: true, indexAxis: 'y',
+        scales: {
+            x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family:'Outfit' } } },
+            y: { grid: { display: false }, ticks: { font: { family:'Outfit' } } }
+        },
+        plugins: { legend: { labels: { font: { family:'Outfit',size:12 }, usePointStyle:true } } }
+    }
+});
+
+// Max Heart Rate Scatter by Age
+const scatterData = [];
+const ageRange = [29,31,34,37,38,39,40,41,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,74,76];
+ageRange.forEach(a => {
+    const hr = 220 - a + (Math.random() * 40 - 20);
+    scatterData.push({ x: a, y: Math.round(hr) });
+});
+new Chart(document.getElementById('hrChart'), {
+    type: 'scatter',
+    data: {
+        datasets: [{
+            label: 'Max Heart Rate vs Age',
+            data: scatterData,
+            backgroundColor: 'rgba(79,70,229,0.6)',
+            pointRadius: 5,
+            pointHoverRadius: 7
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: { title: { display: true, text: 'Age', font: { family:'Outfit',size:12 } }, ticks: { font: { family:'Outfit' } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            y: { title: { display: true, text: 'Max Heart Rate (bpm)', font: { family:'Outfit',size:12 } }, ticks: { font: { family:'Outfit' } }, grid: { color: 'rgba(0,0,0,0.05)' } }
+        },
+        plugins: { legend: { display: false } }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment History - CardioAI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <div class="glass-pill mb-3"><i class="fa-solid fa-clock-rotate-left"></i> History</div>
+        <h2 class="fw-bold gradient-text mb-1" style="font-size:2rem;">Assessment History</h2>
+        <p style="color:var(--text-muted);">View and manage past AI heart disease predictions</p>
+    </div>
+    <a href="{% url 'prediction:create' %}" class="btn btn-primary rounded-pill px-4 shadow">
+        <i class="fa-solid fa-plus me-2"></i>New Assessment
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="m-0 fw-bold"><i class="fa-solid fa-list-check text-primary me-2"></i>Past Predictions</h6>
+        <span class="badge" style="background:var(--bg-secondary);color:var(--text-muted);border:1px solid var(--border-color);">{{ records.count }} Records</span>
+    </div>
+    <div class="card-body p-0">
+        {% if records %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-4 py-3">ID</th>
+                        <th class="py-3">Date & Time</th>
+                        <th class="py-3">Patient Profile</th>
+                        <th class="py-3">AI Prediction</th>
+                        <th class="py-3">Risk Level</th>
+                        <th class="py-3">Score</th>
+                        <th class="px-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td class="px-4 fw-bold" style="color:var(--text-muted);">#{{ record.pk|stringformat:"04d" }}</td>
+                        <td>
+                            <div class="fw-bold" style="font-size:0.9rem;color:var(--text-dark);">{{ record.created_at|date:"M d, Y" }}</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">{{ record.created_at|time:"H:i" }}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width:32px;height:32px;background:var(--bg-secondary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--text-dark);">
+                                    <i class="fa-solid {% if record.sex == 1 %}fa-mars text-primary{% else %}fa-venus text-danger{% endif %}"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold" style="font-size:0.9rem;color:var(--text-dark);">{{ record.age }} years</div>
+                                    <div style="font-size:0.75rem;color:var(--text-muted);">CP Type: {{ record.cp }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if record.predicted_disease %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-heart-crack text-danger"></i>
+                                    <span class="fw-bold" style="color:var(--text-dark);">Disease Detected</span>
+                                </div>
+                            {% else %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-heart-circle-check text-success"></i>
+                                    <span class="fw-bold" style="color:var(--text-dark);">No Disease</span>
+                                </div>
+                            {% endif %}
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">Prob: {{ record.risk_percentage|floatformat:1 }}%</div>
+                        </td>
+                        <td>
+                            {% if record.risk_level == 'low' %}
+                                <span class="badge badge-risk-low">Low</span>
+                            {% elif record.risk_level == 'moderate' %}
+                                <span class="badge badge-risk-moderate">Moderate</span>
+                            {% elif record.risk_level == 'high' %}
+                                <span class="badge badge-risk-high">High</span>
+                            {% else %}
+                                <span class="badge badge-risk-critical">Critical</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <svg viewBox="0 0 36 36" class="circular-chart" style="width:30px;height:30px;">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke-width="3" />
+                                    <path class="circle" stroke-dasharray="{{ record.health_score }}, 100" 
+                                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                          stroke="{% if record.health_score > 70 %}#10B981{% elif record.health_score > 40 %}#F59E0B{% else %}#EF4444{% endif %}" stroke-width="3" />
+                                    <text x="18" y="22.5" text-anchor="middle" font-size="12" font-weight="700"
+                                          fill="{% if record.health_score > 70 %}#10B981{% elif record.health_score > 40 %}#F59E0B{% else %}#EF4444{% endif %}">{{ record.health_score }}</text>
+                                </svg>
+                            </div>
+                        </td>
+                        <td class="px-4 text-end">
+                            <a href="{% url 'prediction:result' record.pk %}" class="btn btn-sm btn-outline-primary rounded-pill me-1" title="View Details">
+                                <i class="fa-solid fa-eye"></i> View
+                            </a>
+                            <a href="{% url 'prediction:report' record.pk %}" class="btn btn-sm btn-outline-danger rounded-pill" title="Download PDF">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fa-solid fa-folder-open fa-3x mb-3" style="color:var(--border-color);"></i>
+            <h5 class="fw-bold" style="color:var(--text-dark);">No Assessments Found</h5>
+            <p style="color:var(--text-muted);">You haven't run any AI predictions yet.</p>
+            <a href="{% url 'prediction:create' %}" class="btn btn-primary rounded-pill mt-2">
+                <i class="fa-solid fa-plus me-2"></i>Run First Assessment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

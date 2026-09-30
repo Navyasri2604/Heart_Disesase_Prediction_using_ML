@@ -1,0 +1,34 @@
+# ─── Core Framework ────────────────────────────────────────────────
+Django>=4.2,<5.0
+
+# ─── Machine Learning ──────────────────────────────────────────────
+scikit-learn>=1.3.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# ─── Advanced ML Models ────────────────────────────────────────────
+xgboost>=2.0.0
+lightgbm>=4.0.0
+
+# ─── Explainable AI ────────────────────────────────────────────────
+shap>=0.43.0
+
+# ─── Visualization ─────────────────────────────────────────────────
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# ─── Model Persistence ─────────────────────────────────────────────
+joblib>=1.3.0
+
+# ─── Report Generation ─────────────────────────────────────────────
+reportlab>=4.0.0
+
+# ─── Utilities ─────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+whitenoise>=6.6.0
+
+# ─── Optional: Production Database ─────────────────────────────────
+# psycopg2-binary>=2.9.0  # Uncomment for PostgreSQL
+
+# ─── Optional: WSGI Server for Deployment ──────────────────────────
+# gunicorn>=21.2.0  # Uncomment for production deployment

@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Analytics Dashboard - CardioAI{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-start mb-5" data-aos="fade-down">
+    <div>
+        <div class="glass-pill mb-3">
+            <i class="fa-solid fa-chart-line"></i> Live Dashboard
+        </div>
+        <h2 class="mb-1 fw-bold gradient-text" style="font-size:2rem;">Analytics Overview</h2>
+        <p style="color:var(--text-muted);">CardioAI Machine Learning Engine — Real-time patient insights</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'dashboard:analytics' %}" class="btn btn-outline-primary rounded-pill px-4">
+            <i class="fa-solid fa-chart-bar me-2"></i>Visual Analytics
+        </a>
+        <a href="{% url 'prediction:create' %}" class="btn btn-primary rounded-pill px-4 shadow">
+            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>New Assessment
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-card primary h-100">
+            <div class="text-uppercase mb-1 fw-bold">Total Assessments</div>
+            <h3 class="counter" data-target="{{ total }}">{{ total }}</h3>
+            <div class="stat-sub">All-time records</div>
+            <i class="fa-solid fa-users icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+        <div class="stat-card success h-100">
+            <div class="text-uppercase mb-1 fw-bold">Low Risk Cases</div>
+            <h3 class="counter" data-target="{{ low_risk }}">{{ low_risk }}</h3>
+            <div class="stat-sub">Healthy patients</div>
+            <i class="fa-solid fa-shield-heart icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
+        <div class="stat-card danger h-100">
+            <div class="text-uppercase mb-1 fw-bold">High Risk Cases</div>
+            <h3 class="counter" data-target="{{ high_risk }}">{{ high_risk }}</h3>
+            <div class="stat-sub">Require attention</div>
+            <i class="fa-solid fa-heart-pulse icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="400">
+        <div class="stat-card warning h-100">
+            <div class="text-uppercase mb-1 fw-bold">AI Model Accuracy</div>
+            <h3>{{ ml_accuracy|floatformat:1 }}%</h3>
+            <div class="stat-sub">{{ model_name }}</div>
+            <i class="fa-solid fa-brain icon"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Risk Distribution Donut -->
+    <div class="col-lg-5" data-aos="fade-right">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-pie-chart text-primary me-2"></i>Risk Distribution</h6>
+                <span class="badge bg-primary rounded-pill">{{ total }} Total</span>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center p-4">
+                <div class="chart-container" style="max-width:300px;width:100%;">
+                    <canvas id="riskChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Level Breakdown -->
+    <div class="col-lg-7" data-aos="fade-left">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-chart-bar text-warning me-2"></i>Risk Level Breakdown</h6>
+            </div>
+            <div class="card-body p-4">
+                <!-- Risk Progress Bars -->
+                {% with total_safe=total|default:1 %}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-600" style="color:var(--success)"><i class="fa-solid fa-shield-check me-2"></i>Low Risk</span>
+                        <span class="fw-bold" style="color:var(--success)">{{ low_risk }} patients</span>
+                    </div>
+                    <div class="progress" style="height:10px;border-radius:10px;background:var(--success-light);">
+                        <div class="progress-bar" style="width:{% widthratio low_risk total_safe 100 %}%;background:var(--secondary);border-radius:10px;transition:width 1.5s ease;" role="progressbar"></div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-600" style="color:var(--warning)"><i class="fa-solid fa-circle-info me-2"></i>Moderate Risk</span>
+                        <span class="fw-bold" style="color:var(--warning)">{{ moderate_risk }} patients</span>
+                    </div>
+                    <div class="progress" style="height:10px;border-radius:10px;background:var(--warning-light);">
+                        <div class="progress-bar" style="width:{% widthratio moderate_risk total_safe 100 %}%;background:var(--warning);border-radius:10px;transition:width 1.5s ease;" role="progressbar"></div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-600" style="color:var(--danger)"><i class="fa-solid fa-circle-exclamation me-2"></i>High Risk</span>
+                        <span class="fw-bold" style="color:var(--danger)">{{ high_risk }} patients</span>
+                    </div>
+                    <div class="progress" style="height:10px;border-radius:10px;background:var(--danger-light);">
+                        <div class="progress-bar" style="width:{% widthratio high_risk total_safe 100 %}%;background:var(--danger);border-radius:10px;transition:width 1.5s ease;" role="progressbar"></div>
+                    </div>
+                </div>
+                <div class="mb-0">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-600" style="color:#F87171"><i class="fa-solid fa-triangle-exclamation me-2"></i>Critical Risk</span>
+                        <span class="fw-bold" style="color:#F87171">{{ critical_risk }} patients</span>
+                    </div>
+                    <div class="progress" style="height:10px;border-radius:10px;background:rgba(248,113,113,0.15);">
+                        <div class="progress-bar" style="width:{% widthratio critical_risk total_safe 100 %}%;background:#EF4444;border-radius:10px;transition:width 1.5s ease;" role="progressbar"></div>
+                    </div>
+                </div>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SHAP + Recent Predictions -->
+<div class="row">
+    <!-- SHAP Feature Importance -->
+    <div class="col-lg-6" data-aos="fade-right">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center">
+                <i class="fa-solid fa-brain text-primary me-2"></i>
+                <h6 class="m-0 fw-bold">SHAP Feature Importance</h6>
+                <span class="ms-2 badge" style="background:rgba(79,70,229,0.1);color:var(--primary);border:1px solid rgba(79,70,229,0.2);">Explainable AI</span>
+            </div>
+            <div class="card-body text-center p-3">
+                <img src="{% static 'charts/shap_summary.png' %}" 
+                     class="img-fluid rounded" 
+                     alt="SHAP Feature Importance Plot"
+                     onerror="this.parentElement.innerHTML='<div class=\'p-5 text-center\'><i class=\'fa-solid fa-chart-gantt fa-4x mb-3\' style=\'opacity:0.3;color:var(--primary)\'></i><h6 style=\'color:var(--text-muted)\'>SHAP Plot Unavailable</h6><p style=\'color:var(--text-muted);font-size:0.85rem\'>Run <code>python train_model.py</code> to generate</p></div>'">
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent AI Predictions -->
+    <div class="col-lg-6" data-aos="fade-left">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-clock-rotate-left text-secondary me-2"></i>Recent Predictions</h6>
+                <a href="{% url 'prediction:history' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for record in recent_predictions %}
+                    <a href="{% url 'prediction:result' record.pk %}" 
+                       class="list-group-item list-group-item-action p-3"
+                       style="border-color:var(--border-color);color:var(--text-dark);">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                     style="width:36px;height:36px;background:var(--primary-gradient);color:white;font-size:0.75rem;font-weight:700;flex-shrink:0;">
+                                    #{{ record.pk|stringformat:"03d" }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold" style="font-size:0.9rem;">Patient #{{ record.pk|stringformat:"04d" }}</div>
+                                    <div style="font-size:0.78rem;color:var(--text-muted);">Age {{ record.age }} &bull; {% if record.sex == 1 %}Male{% else %}Female{% endif %}</div>
+                                </div>
+                            </div>
+                            <div>
+                                {% if record.risk_level == 'low' %}
+                                    <span class="badge badge-risk-low">Low</span>
+                                {% elif record.risk_level == 'moderate' %}
+                                    <span class="badge badge-risk-moderate">Moderate</span>
+                                {% elif record.risk_level == 'high' %}
+                                    <span class="badge badge-risk-high">High</span>
+                                {% else %}
+                                    <span class="badge badge-risk-critical">Critical</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between" style="font-size:0.78rem;color:var(--text-muted);">
+                            <span>Risk: <strong>{{ record.risk_percentage|floatformat:1 }}%</strong> &bull; Score: <strong>{{ record.health_score }}/100</strong></span>
+                            <span>{{ record.created_at|date:"M d, H:i" }}</span>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="p-5 text-center">
+                        <i class="fa-solid fa-robot fa-3x mb-3" style="color:var(--primary);opacity:0.3;"></i>
+                        <h6 style="color:var(--text-muted);">No AI predictions yet</h6>
+                        <a href="{% url 'prediction:create' %}" class="btn btn-primary btn-sm rounded-pill mt-2">
+                            <i class="fa-solid fa-plus me-1"></i> Run First Assessment
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Action Cards -->
+<div class="row mt-2" data-aos="fade-up">
+    <div class="col-12">
+        <h5 class="fw-bold mb-3" style="color:var(--text-dark);">Quick Actions</h5>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'prediction:create' %}" class="text-decoration-none">
+            <div class="card hover-lift text-center p-4">
+                <i class="fa-solid fa-stethoscope fa-2x mb-3" style="color:var(--primary);"></i>
+                <h6 class="fw-bold" style="color:var(--text-dark);">New Assessment</h6>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Run AI heart disease prediction</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'dashboard:analytics' %}" class="text-decoration-none">
+            <div class="card hover-lift text-center p-4">
+                <i class="fa-solid fa-chart-bar fa-2x mb-3" style="color:var(--secondary);"></i>
+                <h6 class="fw-bold" style="color:var(--text-dark);">Visual Analytics</h6>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Explore dataset insights</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'dashboard:bmi_calculator' %}" class="text-decoration-none">
+            <div class="card hover-lift text-center p-4">
+                <i class="fa-solid fa-calculator fa-2x mb-3" style="color:var(--accent);"></i>
+                <h6 class="fw-bold" style="color:var(--text-dark);">BMI Calculator</h6>
+                <p style="font-size:0.8rem;color:var(--text-muted);">Calculate your health score</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <a href="{% url 'dashboard:model_performance' %}" class="text-decoration-none">
+            <div class="card hover-lift text-center p-4">
+                <i class="fa-solid fa-brain fa-2x mb-3" style="color:#8B5CF6;"></i>
+                <h6 class="fw-bold" style="color:var(--text-dark);">Model Performance</h6>
+                <p style="font-size:0.8rem;color:var(--text-muted);">View all ML model metrics</p>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({ duration: 700, once: true, offset: 40 });
+
+    // Risk Distribution Donut Chart
+    const chartData = JSON.parse('{{ chart_data_json|escapejs }}');
+    const ctx = document.getElementById('riskChart');
+    if (ctx) {
+        new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: chartData.risk_labels,
+                datasets: [{
+                    data: chartData.risk_distribution,
+                    backgroundColor: ['#10B981','#F59E0B','#EF4444','#991B1B'],
+                    borderWidth: 0,
+                    hoverOffset: 12,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '72%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { 
+                            font: { family: 'Outfit', size: 12 },
+                            padding: 16,
+                            usePointStyle: true,
+                            pointStyleWidth: 10
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` ${ctx.label}: ${ctx.raw} patients`
+                        }
+                    }
+                },
+                animation: { animateScale: true, animateRotate: true, duration: 1000 }
+            }
+        });
+    }
+
+    // Counter animation
+    function animateCounter(el) {
+        const target = +el.getAttribute('data-target');
+        const duration = 1200;
+        const steps = 40;
+        const increment = target / steps;
+        let current = 0;
+        const timer = setInterval(() => {
+            current = Math.min(current + increment, target);
+            el.textContent = Math.ceil(current);
+            if (current >= target) clearInterval(timer);
+        }, duration / steps);
+    }
+    document.querySelectorAll('.counter').forEach(animateCounter);
+</script>
+{% endblock %}

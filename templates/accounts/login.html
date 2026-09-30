@@ -1,0 +1,48 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - HeartGuard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <i class="fa-solid fa-heart-pulse fa-3x mb-2"></i>
+                <h2>HeartGuard</h2>
+                <p class="text-muted">AI-Powered Disease Prediction</p>
+            </div>
+            
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    Invalid username or password. Please try again.
+                </div>
+            {% endif %}
+            
+            <form method="post" action="{% url 'accounts:login' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-medium"><i class="fa-regular fa-user"></i> Username</label>
+                    <input type="text" name="username" class="form-control" required autofocus>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-medium"><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Sign In <i class="fa-solid fa-arrow-right ms-1"></i></button>
+            </form>
+            
+            <div class="text-center mt-4 pt-3 border-top">
+                <p class="mb-0 text-muted">Don't have an account?</p>
+                <a href="{% url 'accounts:register' %}" class="text-decoration-none fw-bold">Register as a Healthcare Professional</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

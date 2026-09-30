@@ -1,0 +1,305 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CardioAI - AI-Powered Heart Disease Prediction Platform using Machine Learning and Explainable AI.">
+    <title>{% block title %}CardioAI - AI Heart Disease Analytics{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fa-solid fa-heart-pulse"></i> CardioAI</h3>
+            </div>
+            
+            <div class="sidebar-section-label">Main Menu</div>
+            <ul class="list-unstyled components">
+                <li class="{% if request.resolver_match.view_name == 'dashboard:home' %}active{% endif %}">
+                    <a href="{% url 'dashboard:home' %}"><i class="fa-solid fa-chart-line fa-fw"></i> Dashboard</a>
+                </li>
+                <li class="{% if request.resolver_match.view_name == 'prediction:create' %}active{% endif %}">
+                    <a href="{% url 'prediction:create' %}"><i class="fa-solid fa-stethoscope fa-fw"></i> New Assessment</a>
+                </li>
+                <li class="{% if request.resolver_match.view_name == 'prediction:history' %}active{% endif %}">
+                    <a href="{% url 'prediction:history' %}"><i class="fa-solid fa-clock-rotate-left fa-fw"></i> History</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-section-label">Analytics</div>
+            <ul class="list-unstyled components">
+                <li class="{% if request.resolver_match.view_name == 'dashboard:analytics' %}active{% endif %}">
+                    <a href="{% url 'dashboard:analytics' %}"><i class="fa-solid fa-chart-bar fa-fw"></i> Visual Analytics</a>
+                </li>
+                <li class="{% if request.resolver_match.view_name == 'dashboard:model_performance' %}active{% endif %}">
+                    <a href="{% url 'dashboard:model_performance' %}"><i class="fa-solid fa-brain fa-fw"></i> Model Performance</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-section-label">Tools</div>
+            <ul class="list-unstyled components">
+                <li class="{% if request.resolver_match.view_name == 'dashboard:bmi_calculator' %}active{% endif %}">
+                    <a href="{% url 'dashboard:bmi_calculator' %}"><i class="fa-solid fa-calculator fa-fw"></i> BMI Calculator</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-section-label">Account</div>
+            <ul class="list-unstyled components">
+                <li class="{% if request.resolver_match.view_name == 'accounts:profile' %}active{% endif %}">
+                    <a href="{% url 'accounts:profile' %}"><i class="fa-solid fa-user-doctor fa-fw"></i> Profile</a>
+                </li>
+                <li class="{% if request.resolver_match.view_name == 'accounts:activity' %}active{% endif %}">
+                    <a href="{% url 'accounts:activity' %}"><i class="fa-solid fa-list-check fa-fw"></i> Activity Log</a>
+                </li>
+                {% if user.is_staff %}
+                <li>
+                    <a href="{% url 'admin:index' %}"><i class="fa-solid fa-gear fa-fw"></i> Administration</a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="sidebar-footer">
+                CardioAI v2.0 &copy; 2026
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="navbar-btn me-3">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    
+                    <div class="d-none d-md-flex align-items-center">
+                        <span class="glass-pill">
+                            <i class="fa-solid fa-circle text-success" style="font-size:8px;"></i>
+                            AI Engine Online
+                        </span>
+                    </div>
+                    
+                    <div class="ms-auto d-flex align-items-center gap-3">
+                        <!-- Dark Mode Toggle -->
+                        <div id="darkModeToggle" title="Toggle Dark Mode">
+                            <div class="toggle-thumb">
+                                <i class="fa-solid fa-moon" id="toggleIcon"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle"
+                                 style="width:36px;height:36px;background:var(--primary-gradient);color:white;font-weight:700;font-size:0.85rem;">
+                                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                            </div>
+                            <span class="fw-600 d-none d-lg-block" style="color:var(--text-dark);">
+                                {{ user.get_full_name|default:user.username }}
+                            </span>
+                        </div>
+                        
+                        <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content Area -->
+            <div class="container-fluid p-4">
+                <!-- Alert Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3" role="alert">
+                            <i class="fa-solid {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'danger' or message.tags == 'error' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Content Block -->
+                {% block content %}{% endblock %}
+            </div>
+            
+            <!-- Footer -->
+            <footer class="mt-auto py-3 text-center" style="border-top: 1px solid var(--border-color);">
+                <small style="color:var(--text-muted);">
+                    CardioAI &mdash; AI Medical Analytics Platform &copy; 2026 &bull; 
+                    <span class="text-danger">&#9829;</span> For informational purposes only. Always consult a physician.
+                </small>
+            </footer>
+        </div>
+    </div>
+
+    <!-- AI Health Chatbot Widget -->
+    <div class="chatbot-launcher">
+        <button class="chatbot-btn" id="chatbotToggle" title="AI Health Assistant">
+            <i class="fa-solid fa-robot" id="chatbotIcon"></i>
+        </button>
+    </div>
+    
+    <div class="chatbot-window" id="chatbotWindow">
+        <div class="chatbot-header">
+            <div class="bot-avatar"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div>
+                <h6>CardioAI Assistant</h6>
+                <p>Heart Health Advisor • Online</p>
+            </div>
+            <button class="chatbot-close" id="chatbotClose"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            <div class="chat-msg bot">
+                <div class="chat-bubble">
+                    👋 Hello! I'm your <strong>CardioAI Health Assistant</strong>. I can answer questions about heart disease, symptoms, prevention, and healthy living. How can I help you today?
+                </div>
+            </div>
+        </div>
+        <div class="chat-quick-replies" id="quickReplies">
+            <button class="quick-reply-btn" onclick="sendQuickReply('What is heart disease?')">❤️ What is heart disease?</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('What are the symptoms?')">🩺 Symptoms</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('How to prevent heart disease?')">🛡️ Prevention</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('What causes heart disease?')">⚠️ Causes</button>
+        </div>
+        <div class="chatbot-input">
+            <input type="text" id="chatInput" placeholder="Ask about heart health..." 
+                   onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <button class="chatbot-send-btn" onclick="sendChatMessage()">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+    // ─── Dark Mode Toggle ─────────────────────────────────────────────────────
+    (function() {
+        const html = document.documentElement;
+        const toggle = document.getElementById('darkModeToggle');
+        const icon = document.getElementById('toggleIcon');
+        
+        const savedTheme = localStorage.getItem('cardioai-theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateIcon(savedTheme);
+        
+        toggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('cardioai-theme', next);
+            updateIcon(next);
+        });
+        
+        function updateIcon(theme) {
+            icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+    })();
+
+    // ─── AI Health Chatbot ────────────────────────────────────────────────────
+    const chatbotKnowledge = {
+        "what is heart disease": "❤️ **Heart Disease** refers to a range of conditions affecting your heart. The most common type is **Coronary Artery Disease (CAD)**, caused by plaque buildup in arteries. Other types include heart failure, arrhythmias, and valve disease.\n\nIt's the leading cause of death globally, responsible for ~32% of all deaths.",
+        "heart disease": "❤️ **Heart Disease** is a broad term for conditions affecting heart function. Coronary artery disease, heart attacks, arrhythmias, and heart failure are common forms. Early detection via AI tools like CardioAI can save lives!",
+        "symptoms": "🩺 **Common Heart Disease Symptoms:**\n• Chest pain or pressure (angina)\n• Shortness of breath\n• Irregular heartbeat (palpitations)\n• Fatigue and weakness\n• Swelling in legs/ankles/feet\n• Dizziness or lightheadedness\n\n⚠️ If you experience sudden chest pain, call emergency services immediately!",
+        "causes": "⚠️ **Main Causes of Heart Disease:**\n• **High blood pressure** – damages arteries over time\n• **High cholesterol** – builds plaque in blood vessels\n• **Smoking** – damages blood vessels and lowers oxygen\n• **Diabetes** – increases risk significantly\n• **Obesity** – puts extra strain on the heart\n• **Family history** – genetics play a major role\n• **Sedentary lifestyle** – weakens cardiovascular health\n• **Stress** – contributes to high blood pressure",
+        "prevention": "🛡️ **Heart Disease Prevention Tips:**\n• 🚭 Quit smoking completely\n• 🥗 Eat a heart-healthy diet (low sodium, saturated fat)\n• 🏃 Exercise 30+ minutes most days\n• ⚖️ Maintain a healthy weight\n• 💊 Manage blood pressure & cholesterol\n• 🩸 Control blood sugar (diabetes management)\n• 😴 Get 7-9 hours of quality sleep\n• 🧘 Manage stress with meditation or yoga\n• 🏥 Get regular health screenings",
+        "lifestyle": "🌱 **Healthy Lifestyle for Heart Health:**\n• **Mediterranean Diet** – fruits, vegetables, whole grains, fish, olive oil\n• **DASH Diet** – specifically designed to lower blood pressure\n• **Regular Exercise** – aerobic + strength training combination\n• **Limit Alcohol** – max 1 drink/day for women, 2 for men\n• **Stay Hydrated** – drink 8+ glasses of water daily\n• **Mindfulness** – reduces cortisol and blood pressure",
+        "cholesterol": "🔬 **Cholesterol & Heart Health:**\n• **LDL ('Bad'):** Should be below 100 mg/dL (ideally <70 for high-risk)\n• **HDL ('Good'):** Should be above 40 mg/dL (>60 is protective)\n• **Total:** Should be below 200 mg/dL\n• **Triglycerides:** Should be below 150 mg/dL\n\nHigh LDL leads to plaque buildup in arteries — the main cause of heart attacks!",
+        "blood pressure": "💉 **Blood Pressure Guidelines:**\n• **Normal:** Below 120/80 mmHg\n• **Elevated:** 120-129 / <80 mmHg\n• **Stage 1 Hypertension:** 130-139 / 80-89 mmHg\n• **Stage 2 Hypertension:** ≥140 / ≥90 mmHg\n• **Crisis:** >180 / >120 mmHg (seek emergency care!)\n\nHigh blood pressure is called the 'silent killer' – often no symptoms!",
+        "risk factors": "📊 **Major Heart Disease Risk Factors:**\n• Age (men >45, women >55)\n• Male sex (higher risk)\n• Family history of early heart disease\n• Smoking\n• High blood pressure\n• High cholesterol\n• Diabetes\n• Obesity (BMI > 30)\n• Physical inactivity\n• Stress and depression",
+        "bmi": "⚖️ **BMI & Heart Disease:**\n• **Underweight:** BMI < 18.5\n• **Normal:** BMI 18.5–24.9 ✅\n• **Overweight:** BMI 25–29.9 ⚠️\n• **Obese:** BMI ≥ 30 ❌\n\nEvery 5-unit increase in BMI raises heart disease risk by ~30%. Losing even 5-10% of body weight significantly reduces cardiovascular risk!",
+        "diet": "🥗 **Heart-Healthy Diet Tips:**\n• Eat more fruits, vegetables, and whole grains\n• Choose lean proteins (fish, legumes, poultry)\n• Limit red meat and processed meats\n• Reduce sodium (aim for <2300mg/day)\n• Avoid trans fats and limit saturated fats\n• Choose healthy fats: olive oil, avocado, nuts\n• Limit added sugars and refined carbohydrates",
+        "exercise": "🏃 **Exercise Recommendations for Heart Health:**\n• **Minimum:** 150 min moderate aerobic activity per week\n• **Better:** 300 min per week\n• **Strength:** 2+ days per week\n• Great activities: walking, swimming, cycling, yoga\n• Even 10-minute walks count!\n• Sitting for long periods is a risk factor – take breaks every hour",
+        "help": "🤖 **I can help with these topics:**\n• What is heart disease?\n• Symptoms of heart disease\n• Causes & risk factors\n• Prevention strategies\n• Healthy diet & lifestyle\n• Cholesterol & blood pressure\n• BMI & weight management\n• Exercise recommendations\n\nJust ask me anything about heart health! 😊",
+        "hello": "👋 Hello there! I'm **CardioAI**, your personal heart health advisor. I'm here to answer any questions about heart disease, prevention, symptoms, and healthy living. What would you like to know?",
+        "hi": "👋 Hi! I'm your CardioAI Health Assistant. I can help you understand heart disease, prevention tips, and healthy living strategies. What's on your mind?",
+        "thank": "😊 You're very welcome! Remember, maintaining a heart-healthy lifestyle is one of the best investments you can make. Don't hesitate to ask more questions!",
+        "default": "🤔 I'm not sure about that specific topic, but I'm happy to help with heart health questions! Try asking about:\n• Heart disease symptoms\n• Prevention and lifestyle tips\n• Blood pressure or cholesterol\n• Diet and exercise recommendations\n\nOr type **'help'** to see all available topics."
+    };
+    
+    function getBotResponse(userMsg) {
+        const msg = userMsg.toLowerCase().trim();
+        for (const [key, response] of Object.entries(chatbotKnowledge)) {
+            if (msg.includes(key)) return response;
+        }
+        return chatbotKnowledge['default'];
+    }
+    
+    function formatBotMsg(text) {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+    }
+    
+    function appendMessage(text, sender) {
+        const container = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = `chat-msg ${sender}`;
+        div.innerHTML = `<div class="chat-bubble">${sender === 'bot' ? formatBotMsg(text) : text}</div>`;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+    
+    function sendChatMessage() {
+        const input = document.getElementById('chatInput');
+        const msg = input.value.trim();
+        if (!msg) return;
+        appendMessage(msg, 'user');
+        document.getElementById('quickReplies').style.display = 'none';
+        input.value = '';
+        // Simulate typing delay
+        setTimeout(() => appendMessage(getBotResponse(msg), 'bot'), 600);
+    }
+    
+    function sendQuickReply(text) {
+        appendMessage(text, 'user');
+        document.getElementById('quickReplies').style.display = 'none';
+        setTimeout(() => appendMessage(getBotResponse(text), 'bot'), 500);
+    }
+    
+    const chatbotToggle = document.getElementById('chatbotToggle');
+    const chatbotWindow = document.getElementById('chatbotWindow');
+    const chatbotIcon = document.getElementById('chatbotIcon');
+    
+    chatbotToggle.addEventListener('click', () => {
+        chatbotWindow.classList.toggle('open');
+        chatbotIcon.className = chatbotWindow.classList.contains('open') 
+            ? 'fa-solid fa-xmark' : 'fa-solid fa-robot';
+    });
+    document.getElementById('chatbotClose').addEventListener('click', () => {
+        chatbotWindow.classList.remove('open');
+        chatbotIcon.className = 'fa-solid fa-robot';
+    });
+    </script>
+</body>
+</html>

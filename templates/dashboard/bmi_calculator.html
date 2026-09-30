@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}BMI Calculator & Heart Health Score - CardioAI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-5">
+    <div>
+        <div class="glass-pill mb-3"><i class="fa-solid fa-calculator"></i> Health Tools</div>
+        <h2 class="mb-1 fw-bold gradient-text" style="font-size:2rem;">BMI & Heart Health Calculator</h2>
+        <p style="color:var(--text-muted);">Calculate your Body Mass Index and estimated heart health score</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- BMI Calculator -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-weight-scale text-primary me-2"></i>BMI Calculator</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Height</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="heightInput" placeholder="170" min="100" max="250">
+                            <span class="input-group-text" style="background:var(--bg-secondary);color:var(--text-muted);border-color:var(--border-color);">cm</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Weight</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="weightInput" placeholder="70" min="20" max="300">
+                            <span class="input-group-text" style="background:var(--bg-secondary);color:var(--text-muted);border-color:var(--border-color);">kg</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Age</label>
+                        <input type="number" class="form-control" id="ageInputBMI" placeholder="45" min="1" max="120">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Gender</label>
+                        <select class="form-select" id="genderInput">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary w-100 rounded-pill" onclick="calculateBMI()">
+                    <i class="fa-solid fa-calculator me-2"></i>Calculate BMI & Health Score
+                </button>
+                
+                <!-- BMI Result -->
+                <div id="bmiResult" class="mt-4" style="display:none;">
+                    <div class="p-4 rounded-3 text-center mb-4" id="bmiResultCard">
+                        <div class="bmi-indicator" id="bmiValue">--</div>
+                        <div class="text-muted mt-1 mb-2">Body Mass Index</div>
+                        <div class="bmi-category-badge" id="bmiCategory">--</div>
+                    </div>
+                    
+                    <!-- BMI Scale -->
+                    <div class="mb-3">
+                        <div style="font-size:0.8rem;color:var(--text-muted);font-weight:600;margin-bottom:8px;">BMI Scale</div>
+                        <div class="position-relative" style="height:12px;border-radius:10px;background:linear-gradient(to right,#60A5FA,#10B981,#F59E0B,#EF4444);overflow:hidden;margin-bottom:4px;">
+                            <div id="bmiMarker" class="position-absolute" 
+                                 style="top:-4px;width:20px;height:20px;background:white;border:3px solid #4F46E5;border-radius:50%;transform:translateX(-50%);transition:left 0.8s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between" style="font-size:0.72rem;color:var(--text-muted);">
+                            <span>Underweight<br>&lt;18.5</span>
+                            <span>Normal<br>18.5-25</span>
+                            <span>Overweight<br>25-30</span>
+                            <span>Obese<br>&gt;30</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Ideal Weight Range -->
+                    <div class="p-3 rounded" style="background:var(--bg-secondary);" id="idealWeightDiv">
+                        <div style="font-size:0.85rem;color:var(--text-muted);" id="idealWeightText"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Heart Health Score -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-heart-pulse text-danger me-2"></i>Heart Health Risk Estimator</h6>
+            </div>
+            <div class="card-body p-4">
+                <!-- Risk Factors Input -->
+                <div class="mb-3">
+                    <label class="form-label">Blood Pressure Systolic <span style="font-size:0.8rem;color:var(--text-muted);">(mmHg)</span></label>
+                    <input type="range" class="form-range" id="bpSlider" min="80" max="200" value="120" 
+                           oninput="document.getElementById('bpVal').textContent=this.value;estimateRisk()">
+                    <div class="d-flex justify-content-between" style="font-size:0.8rem;color:var(--text-muted);">
+                        <span>80</span><span id="bpVal" class="fw-bold" style="color:var(--primary);">120</span><span>200</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Cholesterol Level <span style="font-size:0.8rem;color:var(--text-muted);">(mg/dl)</span></label>
+                    <input type="range" class="form-range" id="cholSlider" min="100" max="400" value="200"
+                           oninput="document.getElementById('cholVal').textContent=this.value;estimateRisk()">
+                    <div class="d-flex justify-content-between" style="font-size:0.8rem;color:var(--text-muted);">
+                        <span>100</span><span id="cholVal" class="fw-bold" style="color:var(--warning);">200</span><span>400</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Maximum Heart Rate <span style="font-size:0.8rem;color:var(--text-muted);">(bpm)</span></label>
+                    <input type="range" class="form-range" id="hrSlider" min="60" max="220" value="150"
+                           oninput="document.getElementById('hrVal').textContent=this.value;estimateRisk()">
+                    <div class="d-flex justify-content-between" style="font-size:0.8rem;color:var(--text-muted);">
+                        <span>60</span><span id="hrVal" class="fw-bold" style="color:var(--secondary);">150</span><span>220</span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Smoking</label>
+                        <select class="form-select form-select-sm" id="smokingInput" onchange="estimateRisk()">
+                            <option value="0">Non-Smoker</option>
+                            <option value="1">Former Smoker</option>
+                            <option value="2">Current Smoker</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Diabetes</label>
+                        <select class="form-select form-select-sm" id="diabetesInput" onchange="estimateRisk()">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Heart Health Score Display -->
+                <div id="heartScoreDisplay" class="text-center p-4 rounded-3" style="background:var(--bg-secondary);">
+                    <div class="d-flex align-items-center justify-content-center gap-4">
+                        <div>
+                            <svg viewBox="0 0 36 36" class="circular-chart" style="width:100px;height:100px;">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path id="scoreCircle" class="circle" stroke-dasharray="75, 100" 
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                                      stroke="#10B981" />
+                                <text x="18" y="20.5" text-anchor="middle" font-size="8" font-weight="700" id="scoreText" fill="#10B981">75</text>
+                            </svg>
+                        </div>
+                        <div class="text-start">
+                            <div class="fw-bold" style="font-size:1.1rem;color:var(--text-dark);">Heart Health Score</div>
+                            <div id="riskCategoryBadge" class="bmi-category-badge mt-1" 
+                                 style="background:rgba(16,185,129,0.15);color:#10B981;">Good</div>
+                            <p id="riskTip" class="mt-2 mb-0" style="font-size:0.82rem;color:var(--text-muted);">
+                                Your current indicators suggest a relatively healthy cardiovascular profile.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BMI Reference Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-table text-secondary me-2"></i>BMI Classification & Heart Disease Risk</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-4">BMI Range</th>
+                                <th>Category</th>
+                                <th>Cardiovascular Risk</th>
+                                <th class="px-4">Recommendation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="px-4 fw-bold">&lt; 18.5</td>
+                                <td><span class="badge" style="background:rgba(96,165,250,0.15);color:#60A5FA;border:1px solid rgba(96,165,250,0.3);">Underweight</span></td>
+                                <td><span class="badge badge-risk-moderate">Moderate</span></td>
+                                <td class="px-4" style="font-size:0.85rem;color:var(--text-muted);">Increase caloric intake with nutritious foods</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 fw-bold">18.5 – 24.9</td>
+                                <td><span class="badge badge-risk-low">Normal Weight</span></td>
+                                <td><span class="badge badge-risk-low">Low</span></td>
+                                <td class="px-4" style="font-size:0.85rem;color:var(--text-muted);">Maintain current weight with regular exercise</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 fw-bold">25.0 – 29.9</td>
+                                <td><span class="badge badge-risk-moderate">Overweight</span></td>
+                                <td><span class="badge badge-risk-moderate">Moderate</span></td>
+                                <td class="px-4" style="font-size:0.85rem;color:var(--text-muted);">Reduce caloric intake and increase physical activity</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 fw-bold">30.0 – 34.9</td>
+                                <td><span class="badge badge-risk-high">Obese Class I</span></td>
+                                <td><span class="badge badge-risk-high">High</span></td>
+                                <td class="px-4" style="font-size:0.85rem;color:var(--text-muted);">Medical weight management program recommended</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 fw-bold">35.0 – 39.9</td>
+                                <td><span class="badge badge-risk-high">Obese Class II</span></td>
+                                <td><span class="badge badge-risk-high">Very High</span></td>
+                                <td class="px-4" style="font-size:0.85rem;color:var(--text-muted);">Consult physician for weight management</td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 fw-bold">&gt; 40</td>
+                                <td><span class="badge badge-risk-critical">Obese Class III</span></td>
+                                <td><span class="badge badge-risk-critical">Extreme</span></td>
+                                <td class="px-4" style="font-size:0.85rem;color:var(--text-muted);">Urgent medical intervention required</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function calculateBMI() {
+    const h = parseFloat(document.getElementById('heightInput').value);
+    const w = parseFloat(document.getElementById('weightInput').value);
+    const age = parseFloat(document.getElementById('ageInputBMI').value) || 40;
+    
+    if (!h || !w || h < 50 || w < 10) {
+        alert('Please enter valid height and weight values.');
+        return;
+    }
+    
+    const heightM = h / 100;
+    const bmi = w / (heightM * heightM);
+    const bmiRounded = bmi.toFixed(1);
+    
+    document.getElementById('bmiValue').textContent = bmiRounded;
+    document.getElementById('bmiResult').style.display = 'block';
+    
+    // Determine category
+    let category, color, bgColor, markerPos;
+    if (bmi < 18.5) {
+        category = 'Underweight'; color = '#60A5FA';
+        bgColor = 'rgba(96,165,250,0.12)'; markerPos = Math.min((bmi/18.5)*25, 25);
+    } else if (bmi < 25) {
+        category = 'Normal Weight ✅'; color = '#10B981';
+        bgColor = 'rgba(16,185,129,0.12)'; markerPos = 25 + ((bmi-18.5)/6.5)*25;
+    } else if (bmi < 30) {
+        category = 'Overweight ⚠️'; color = '#F59E0B';
+        bgColor = 'rgba(245,158,11,0.12)'; markerPos = 50 + ((bmi-25)/5)*25;
+    } else {
+        category = 'Obese ❌'; color = '#EF4444';
+        bgColor = 'rgba(239,68,68,0.12)'; markerPos = Math.min(75 + ((bmi-30)/10)*25, 98);
+    }
+    
+    document.getElementById('bmiCategory').textContent = category;
+    document.getElementById('bmiCategory').style.background = bgColor;
+    document.getElementById('bmiCategory').style.color = color;
+    document.getElementById('bmiResultCard').style.background = bgColor;
+    document.getElementById('bmiValue').style.color = color;
+    document.getElementById('bmiMarker').style.left = markerPos + '%';
+    document.getElementById('bmiMarker').style.borderColor = color;
+    
+    // Ideal weight
+    const idealMin = (18.5 * heightM * heightM).toFixed(1);
+    const idealMax = (24.9 * heightM * heightM).toFixed(1);
+    document.getElementById('idealWeightText').innerHTML = 
+        `<strong>Ideal weight range for your height:</strong> ${idealMin} – ${idealMax} kg<br>
+         <span style="color:var(--text-muted);">Current difference: ${(w - idealMax) > 0 ? '+' : ''}${(w - ((parseFloat(idealMin)+parseFloat(idealMax))/2)).toFixed(1)} kg from ideal midpoint</span>`;
+    
+    estimateRisk();
+}
+
+function estimateRisk() {
+    const bp = parseInt(document.getElementById('bpSlider').value);
+    const chol = parseInt(document.getElementById('cholSlider').value);
+    const hr = parseInt(document.getElementById('hrSlider').value);
+    const smoking = parseInt(document.getElementById('smokingInput').value);
+    const diabetes = parseInt(document.getElementById('diabetesInput').value);
+    
+    // Simplified risk scoring (0-100, higher = worse)
+    let riskScore = 0;
+    if (bp > 140) riskScore += 25;
+    else if (bp > 120) riskScore += 10;
+    if (chol > 240) riskScore += 20;
+    else if (chol > 200) riskScore += 10;
+    if (hr < 100) riskScore += 5; // good max HR
+    else if (hr > 170) riskScore -= 5; // poor fitness
+    riskScore += smoking * 12;
+    riskScore += diabetes * 15;
+    
+    const healthScore = Math.max(5, Math.min(98, 100 - riskScore));
+    
+    const circle = document.getElementById('scoreCircle');
+    const scoreText = document.getElementById('scoreText');
+    const badge = document.getElementById('riskCategoryBadge');
+    const tip = document.getElementById('riskTip');
+    
+    circle.setAttribute('stroke-dasharray', `${healthScore}, 100`);
+    scoreText.textContent = healthScore;
+    
+    let color, cat, tipText;
+    if (healthScore >= 75) {
+        color = '#10B981'; cat = '💚 Low Risk';
+        tipText = 'Your cardiovascular indicators look healthy! Keep maintaining your lifestyle.';
+    } else if (healthScore >= 50) {
+        color = '#F59E0B'; cat = '🟡 Moderate Risk';
+        tipText = 'Some risk factors detected. Consider lifestyle modifications and regular check-ups.';
+    } else if (healthScore >= 25) {
+        color = '#EF4444'; cat = '🔴 High Risk';
+        tipText = 'Multiple risk factors present. Consult a cardiologist and make immediate lifestyle changes.';
+    } else {
+        color = '#991B1B'; cat = '🚨 Critical Risk';
+        tipText = 'Very high risk indicators! Seek immediate medical evaluation from a cardiologist.';
+    }
+    
+    circle.setAttribute('stroke', color);
+    scoreText.setAttribute('fill', color);
+    badge.textContent = cat;
+    badge.style.color = color;
+    badge.style.background = color.replace(')', ', 0.15)').replace('rgb', 'rgba');
+    tip.textContent = tipText;
+}
+
+// Init
+estimateRisk();
+</script>
+{% endblock %}

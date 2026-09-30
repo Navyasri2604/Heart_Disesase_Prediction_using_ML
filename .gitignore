@@ -1,0 +1,11 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
+staticfiles/
+.env
+dataset/heart.csv
+trained_model/*.joblib
+trained_model/metrics.json
+static/img/feature_importance.png

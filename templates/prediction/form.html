@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}New Assessment - CardioAI{% endblock %}
+
+{% block extra_css %}
+<style>
+.step-section-header {
+    background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(124,58,237,0.05));
+    border: 1px solid rgba(79,70,229,0.15);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.step-section-header .step-num {
+    width: 34px; height: 34px;
+    background: var(--primary-gradient);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 800; font-size: 0.9rem;
+    flex-shrink: 0;
+}
+.input-with-icon { position: relative; }
+.input-with-icon .fa-icon {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted); font-size: 0.85rem;
+    pointer-events: none;
+}
+.field-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.analyze-btn {
+    background: var(--primary-gradient);
+    border: none;
+    color: white;
+    padding: 16px 48px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 8px 25px rgba(79,70,229,0.4);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Outfit', sans-serif;
+}
+.analyze-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(79,70,229,0.6);
+}
+.analyze-btn:active { transform: translateY(-1px); }
+.analyze-btn i { font-size: 1.2rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <div class="glass-pill mb-3"><i class="fa-solid fa-stethoscope"></i> Clinical Assessment</div>
+                <h2 class="fw-bold gradient-text mb-1" style="font-size:2rem;">New AI Assessment</h2>
+                <p style="color:var(--text-muted);">Enter patient clinical data for ML-powered heart disease risk prediction</p>
+            </div>
+            <a href="{% url 'prediction:history' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fa-solid fa-clock-rotate-left me-2"></i>History
+            </a>
+        </div>
+
+        <!-- Disclaimer Banner -->
+        <div class="alert rounded-3 mb-4" style="background:rgba(79,70,229,0.08);border:1px solid rgba(79,70,229,0.2);color:var(--text-dark);" role="alert">
+            <i class="fa-solid fa-shield-halved text-primary me-2"></i>
+            <strong>Clinical Tool Notice:</strong> This AI assessment is for screening purposes only and does not replace a physician's evaluation.
+            <strong class="text-primary"> Always consult a cardiologist for diagnosis.</strong>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <form method="post" action="{% url 'prediction:create' %}" id="predictionForm">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger rounded-3 mb-4">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Section 1: Demographics -->
+                    <div class="step-section-header">
+                        <div class="step-num">1</div>
+                        <div>
+                            <div class="fw-bold" style="color:var(--text-dark);">Patient Demographics & Symptoms</div>
+                            <div class="field-hint">Basic patient information and reported symptoms</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">{{ form.age.label }}</label>
+                            <div class="input-with-icon">
+                                {{ form.age }}
+                                <i class="fa-solid fa-calendar-days fa-icon"></i>
+                            </div>
+                            {% if form.age.errors %}<div class="text-danger small mt-1">{{ form.age.errors.0 }}</div>{% endif %}
+                            <div class="field-hint"><i class="fa-solid fa-info-circle"></i> 1–120 years</div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">{{ form.sex.label }}</label>
+                            {{ form.sex }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{{ form.cp.label }}</label>
+                            {{ form.cp }}
+                            <div class="field-hint"><i class="fa-solid fa-info-circle"></i> Type of chest pain experienced</div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Clinical Vitals -->
+                    <div class="step-section-header">
+                        <div class="step-num">2</div>
+                        <div>
+                            <div class="fw-bold" style="color:var(--text-dark);">Clinical Vitals & Lab Values</div>
+                            <div class="field-hint">Blood pressure, cholesterol, and blood sugar measurements</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.trestbps.label }}</label>
+                            <div class="input-with-icon">
+                                {{ form.trestbps }}
+                                <i class="fa-solid fa-gauge-high fa-icon"></i>
+                            </div>
+                            <div class="field-hint"><i class="fa-solid fa-info-circle"></i> mmHg at rest (Normal: &lt;120)</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.chol.label }}</label>
+                            <div class="input-with-icon">
+                                {{ form.chol }}
+                                <i class="fa-solid fa-droplet fa-icon"></i>
+                            </div>
+                            <div class="field-hint"><i class="fa-solid fa-info-circle"></i> mg/dl (Normal: &lt;200)</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.fbs.label }}</label>
+                            {{ form.fbs }}
+                            <div class="field-hint"><i class="fa-solid fa-info-circle"></i> Fasting level relative to 120 mg/dl</div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Diagnostic Tests -->
+                    <div class="step-section-header">
+                        <div class="step-num">3</div>
+                        <div>
+                            <div class="fw-bold" style="color:var(--text-dark);">Diagnostic Test Results</div>
+                            <div class="field-hint">ECG findings, stress test, and exercise parameters</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.restecg.label }}</label>
+                            {{ form.restecg }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.thalach.label }}</label>
+                            <div class="input-with-icon">
+                                {{ form.thalach }}
+                                <i class="fa-solid fa-heart-pulse fa-icon"></i>
+                            </div>
+                            <div class="field-hint"><i class="fa-solid fa-info-circle"></i> bpm during max exercise</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.exang.label }}</label>
+                            {{ form.exang }}
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Advanced Parameters -->
+                    <div class="step-section-header">
+                        <div class="step-num">4</div>
+                        <div>
+                            <div class="fw-bold" style="color:var(--text-dark);">Advanced Cardiac Parameters</div>
+                            <div class="field-hint">ST segment analysis, vessel count, and thalassemia type</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.oldpeak.label }}</label>
+                            <div class="input-with-icon">
+                                {{ form.oldpeak }}
+                                <i class="fa-solid fa-chart-line fa-icon"></i>
+                            </div>
+                            <div class="field-hint"><i class="fa-solid fa-info-circle"></i> ST depression (0.0–6.2)</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ form.slope.label }}</label>
+                            {{ form.slope }}
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">{{ form.ca.label }}</label>
+                            {{ form.ca }}
+                            <div class="field-hint">0–3 vessels</div>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">{{ form.thal.label }}</label>
+                            {{ form.thal }}
+                        </div>
+                    </div>
+
+                    <!-- Submit Section -->
+                    <div class="border-top pt-4 mt-2" style="border-color:var(--border-color) !important;">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <div class="d-flex align-items-center gap-2" style="color:var(--text-muted);font-size:0.85rem;">
+                                    <i class="fa-solid fa-lock text-success"></i>
+                                    <span>Data is processed securely. Not stored externally.</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex justify-content-md-end gap-3 flex-wrap">
+                                <button type="reset" class="btn btn-outline-secondary rounded-pill px-4">
+                                    <i class="fa-solid fa-rotate-left me-2"></i>Clear Form
+                                </button>
+                                <button type="submit" class="analyze-btn" id="submitBtn">
+                                    <i class="fa-solid fa-microchip"></i>
+                                    Run AI Analysis
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="row mt-4">
+            <div class="col-md-4 mb-3">
+                <div class="card p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-network-wired fa-2x" style="color:var(--primary);"></i>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;color:var(--text-dark);">Ensemble ML Models</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);">XGBoost, LightGBM, RF, SVM</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-brain fa-2x" style="color:#8B5CF6;"></i>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;color:var(--text-dark);">SHAP Explainability</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);">See exactly which factors matter</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-file-pdf fa-2x" style="color:var(--danger);"></i>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;color:var(--text-dark);">PDF Report Export</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);">Download clinical-grade report</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('predictionForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing with AI...';
+    btn.disabled = true;
+    btn.style.opacity = '0.85';
+});
+</script>
+{% endblock %}

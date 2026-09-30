@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - HeartGuard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="auth-wrapper py-5">
+        <div class="auth-card" style="max-width: 600px;">
+            <div class="auth-logo">
+                <i class="fa-solid fa-user-doctor fa-3x mb-2"></i>
+                <h2>Professional Registration</h2>
+                <p class="text-muted">Join the HeartGuard Platform</p>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">{{ form.first_name.label }}</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}<div class="text-danger small">{{ form.first_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">{{ form.last_name.label }}</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}<div class="text-danger small">{{ form.last_name.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-medium">{{ form.username.label }} <span class="text-danger">*</span></label>
+                    {{ form.username }}
+                    <div class="form-text">{{ form.username.help_text }}</div>
+                    {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-medium">{{ form.email.label }} <span class="text-danger">*</span></label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">{{ form.password1.label }} <span class="text-danger">*</span></label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}<div class="text-danger small">{{ form.password1.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-medium">{{ form.password2.label }} <span class="text-danger">*</span></label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}<div class="text-danger small">{{ form.password2.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Create Account</button>
+            </form>
+            
+            <div class="text-center mt-4 pt-3 border-top">
+                <p class="mb-0 text-muted">Already registered?</p>
+                <a href="{% url 'accounts:login' %}" class="text-decoration-none fw-bold">Sign In Instead</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

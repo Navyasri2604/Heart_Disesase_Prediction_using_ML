@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}AI Assessment Result - CardioAI{% endblock %}
+
+{% block extra_css %}
+<style>
+@keyframes dash { 0% { stroke-dasharray: 0, 100; } }
+@keyframes fadeSlideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.result-anim { animation: fadeSlideUp 0.6s ease forwards; }
+.result-anim:nth-child(1) { animation-delay: 0.1s; }
+.result-anim:nth-child(2) { animation-delay: 0.2s; }
+.result-anim:nth-child(3) { animation-delay: 0.3s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'prediction:history' %}" class="text-decoration-none fw-bold" style="color:var(--primary);">
+        <i class="fa-solid fa-arrow-left me-2"></i>Back to Assessment History
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+
+        <!-- ━━━━ Risk Banner ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+        <div class="card overflow-hidden mb-4 shadow-lg" style="border-radius:20px;">
+            {% if record.risk_level == 'critical' %}
+            <div class="result-banner" style="background:linear-gradient(135deg,#7F1D1D,#DC2626);">
+                <div style="position:relative;z-index:1;color:white;">
+                    <i class="fa-solid fa-triangle-exclamation fa-3x mb-3"></i>
+                    <h2 class="fw-bold">CRITICAL RISK DETECTED</h2>
+                    <p class="mb-0 opacity-75">Immediate cardiological intervention is strongly advised.</p>
+                </div>
+            </div>
+            {% elif record.risk_level == 'high' %}
+            <div class="result-banner" style="background:linear-gradient(135deg,#DC2626,#F87171);">
+                <div style="position:relative;z-index:1;color:white;">
+                    <i class="fa-solid fa-circle-exclamation fa-3x mb-3"></i>
+                    <h2 class="fw-bold">HIGH RISK DETECTED</h2>
+                    <p class="mb-0 opacity-75">Clinical indicators suggest a high probability of heart disease.</p>
+                </div>
+            </div>
+            {% elif record.risk_level == 'moderate' %}
+            <div class="result-banner" style="background:linear-gradient(135deg,#B45309,#F59E0B);">
+                <div style="position:relative;z-index:1;color:white;">
+                    <i class="fa-solid fa-circle-info fa-3x mb-3"></i>
+                    <h2 class="fw-bold">MODERATE RISK</h2>
+                    <p class="mb-0 opacity-75">Patient shows some concerning clinical indicators.</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="result-banner" style="background:linear-gradient(135deg,#065F46,#10B981);">
+                <div style="position:relative;z-index:1;color:white;">
+                    <i class="fa-solid fa-shield-check fa-3x mb-3"></i>
+                    <h2 class="fw-bold">LOW RISK INDICATED</h2>
+                    <p class="mb-0 opacity-75">Clinical indicators do not currently suggest a high probability of heart disease.</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card-body p-4 p-md-5">
+                <!-- ━━━ Key Metrics Row ━━━ -->
+                <div class="row text-center mb-5 g-4">
+                    <!-- Health Score -->
+                    <div class="col-md-4 result-anim">
+                        <div class="p-4 rounded-3" style="background:var(--bg-secondary);">
+                            <h6 class="text-uppercase fw-bold mb-3" style="letter-spacing:1px;font-size:0.75rem;color:var(--text-muted);">Heart Health Score</h6>
+                            <svg viewBox="0 0 36 36" class="circular-chart" style="width:120px;height:120px;">
+                                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle" stroke-dasharray="{{ record.health_score }}, 100" 
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      stroke="{% if record.health_score > 70 %}#10B981{% elif record.health_score > 40 %}#F59E0B{% else %}#EF4444{% endif %}" />
+                                <text x="18" y="20.5" text-anchor="middle" font-size="7.5" font-weight="800"
+                                      fill="{% if record.health_score > 70 %}#10B981{% elif record.health_score > 40 %}#F59E0B{% else %}#EF4444{% endif %}">{{ record.health_score }}</text>
+                                <text x="18" y="26" text-anchor="middle" font-size="3.5" fill="#94A3B8">/100</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Disease Probability -->
+                    <div class="col-md-4 result-anim">
+                        <div class="p-4 rounded-3 h-100" style="background:var(--bg-secondary);">
+                            <h6 class="text-uppercase fw-bold mb-3" style="letter-spacing:1px;font-size:0.75rem;color:var(--text-muted);">Disease Probability</h6>
+                            <div style="font-size:3.5rem;font-weight:800;
+                                color:{% if record.risk_level in 'critical high' %}#EF4444{% elif record.risk_level == 'moderate' %}#F59E0B{% else %}#10B981{% endif %};">
+                                {{ record.risk_percentage|floatformat:1 }}%
+                            </div>
+                            <div style="font-size:0.8rem;color:var(--text-muted);">confidence from ML model</div>
+                            <div class="progress mt-3" style="height:8px;border-radius:10px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width:{{ record.risk_percentage|floatformat:0 }}%;
+                                     background:{% if record.risk_level in 'critical high' %}var(--danger){% elif record.risk_level == 'moderate' %}var(--warning){% else %}var(--secondary){% endif %};
+                                     border-radius:10px;transition:width 1.5s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Category -->
+                    <div class="col-md-4 result-anim">
+                        <div class="p-4 rounded-3 h-100" style="background:var(--bg-secondary);">
+                            <h6 class="text-uppercase fw-bold mb-3" style="letter-spacing:1px;font-size:0.75rem;color:var(--text-muted);">Risk Category</h6>
+                            {% if record.risk_level == 'low' %}
+                                <div style="font-size:2.5rem;font-weight:800;color:#10B981;">LOW</div>
+                                <div class="mt-2 badge badge-risk-low" style="font-size:0.85rem;padding:8px 16px;">Healthy Range</div>
+                            {% elif record.risk_level == 'moderate' %}
+                                <div style="font-size:2.5rem;font-weight:800;color:#F59E0B;">MODERATE</div>
+                                <div class="mt-2 badge badge-risk-moderate" style="font-size:0.85rem;padding:8px 16px;">Monitor Closely</div>
+                            {% elif record.risk_level == 'high' %}
+                                <div style="font-size:2.5rem;font-weight:800;color:#EF4444;">HIGH</div>
+                                <div class="mt-2 badge badge-risk-high" style="font-size:0.85rem;padding:8px 16px;">Action Required</div>
+                            {% else %}
+                                <div style="font-size:2.5rem;font-weight:800;color:#7F1D1D;">CRITICAL</div>
+                                <div class="mt-2 badge badge-risk-critical" style="font-size:0.85rem;padding:8px 16px;">Emergency Review</div>
+                            {% endif %}
+                            <div class="mt-2" style="font-size:0.78rem;color:var(--text-muted);">AI Model: {{ record.model_name }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ━━━ Clinical Summary Card ━━━ -->
+                <div class="rounded-3 p-4 mb-4" style="background:var(--bg-secondary);border:1px solid var(--border-color);">
+                    <h6 class="fw-bold mb-3"><i class="fa-solid fa-user-doctor text-primary me-2"></i>Patient Clinical Summary</h6>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-2">
+                            <div style="font-size:0.75rem;color:var(--text-muted);">AGE</div>
+                            <div class="fw-bold" style="color:var(--text-dark);">{{ record.age }} yrs</div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <div style="font-size:0.75rem;color:var(--text-muted);">GENDER</div>
+                            <div class="fw-bold" style="color:var(--text-dark);">{% if record.sex == 1 %}Male{% else %}Female{% endif %}</div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <div style="font-size:0.75rem;color:var(--text-muted);">RESTING BP</div>
+                            <div class="fw-bold" style="color:{% if record.trestbps > 140 %}var(--danger){% elif record.trestbps > 120 %}var(--warning){% else %}var(--secondary){% endif %};">
+                                {{ record.trestbps }} mmHg
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <div style="font-size:0.75rem;color:var(--text-muted);">CHOLESTEROL</div>
+                            <div class="fw-bold" style="color:{% if record.chol > 240 %}var(--danger){% elif record.chol > 200 %}var(--warning){% else %}var(--secondary){% endif %};">
+                                {{ record.chol }} mg/dl
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <div style="font-size:0.75rem;color:var(--text-muted);">MAX HR</div>
+                            <div class="fw-bold" style="color:var(--text-dark);">{{ record.thalach }} bpm</div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <div style="font-size:0.75rem;color:var(--text-muted);">ST DEPRESSION</div>
+                            <div class="fw-bold" style="color:{% if record.oldpeak > 2 %}var(--danger){% else %}var(--text-dark){% endif %};">{{ record.oldpeak }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ━━━ SHAP Explainable AI Section ━━━ -->
+                {% if top_factors %}
+                <div class="rounded-3 p-4 mb-4" style="background:rgba(79,70,229,0.05);border:1px solid rgba(79,70,229,0.15);">
+                    <h5 class="fw-bold mb-1 d-flex align-items-center">
+                        <span class="me-2" style="width:32px;height:32px;background:var(--primary-gradient);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:white;font-size:0.85rem;">
+                            <i class="fa-solid fa-brain"></i>
+                        </span>
+                        Explainable AI (SHAP) Insights
+                    </h5>
+                    <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:20px;margin-left:44px;">
+                        The AI model identified these clinical factors as the primary drivers for this prediction:
+                    </p>
+                    
+                    {% for factor in top_factors %}
+                    <div class="mb-3 p-3 rounded-2" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge" style="background:rgba(79,70,229,0.1);color:var(--primary);border:1px solid rgba(79,70,229,0.2);font-size:0.7rem;">
+                                    #{{ forloop.counter }}
+                                </span>
+                                <span class="fw-bold" style="color:var(--text-dark);">{{ factor.friendly_name }}</span>
+                                <span style="font-size:0.82rem;color:var(--text-muted);">= {{ factor.value }}</span>
+                            </div>
+                            <span class="fw-bold {{ factor.color_class }}">
+                                {% if factor.impact > 0 %}
+                                    <i class="fa-solid fa-arrow-trend-up me-1"></i>+{{ factor.impact|floatformat:3 }}
+                                {% else %}
+                                    <i class="fa-solid fa-arrow-trend-down me-1"></i>{{ factor.impact|floatformat:3 }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="factor-bar">
+                            <div class="factor-bar-fill" 
+                                 style="width:{{ factor.impact|floatformat:2 }}%;
+                                 background:{% if factor.impact > 0 %}linear-gradient(90deg,#EF4444,#F87171){% else %}linear-gradient(90deg,#10B981,#34D399){% endif %};
+                                 width:{% if factor.impact > 0 %}{{ factor.impact|floatformat:0 }}{% else %}{{ factor.impact|cut:'-' }}{% endif %}%;
+                                 max-width:100%;"></div>
+                        </div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;">
+                            {% if factor.impact > 0 %}
+                                This value <strong>increased</strong> heart disease risk
+                            {% else %}
+                                This value <strong>decreased</strong> heart disease risk
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- ━━━ AI Recommendations ━━━ -->
+                <div class="rounded-3 p-4 mb-5" style="background:var(--bg-secondary);border:1px solid var(--border-color);">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center">
+                        <span class="me-2" style="width:32px;height:32px;background:var(--secondary-gradient);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:white;font-size:0.85rem;">
+                            <i class="fa-solid fa-stethoscope"></i>
+                        </span>
+                        Clinical AI Recommendations
+                    </h5>
+                    <div class="row g-3">
+                        {% if record.risk_level == 'critical' %}
+                        <div class="col-12">
+                            <div class="alert rounded-3 mb-2" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);">
+                                <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i>
+                                <strong class="text-danger">EMERGENCY CARDIAC REVIEW REQUIRED</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-syringe text-danger mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Immediate Action</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Schedule emergency cardiology consult. Consider angiography or stress echocardiography immediately.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-pills text-warning mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Medication Review</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Urgent review of statin and antihypertensive therapy. Anti-platelet consideration.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-hospital text-primary mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Monitoring</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Continuous cardiac monitoring may be indicated. 24-hour Holter monitoring.</div>
+                            </div>
+                        </div>
+                        {% elif record.risk_level == 'high' %}
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-calendar-check text-danger mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Urgent Consultation</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Schedule cardiologist appointment within 1 week. Do not delay.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-heartbeat text-warning mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Diagnostic Testing</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Consider echocardiogram or treadmill stress test for definitive assessment.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-salad text-success mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Lifestyle Intervention</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Strict diet modification (DASH diet), quit smoking if applicable, begin cardiac rehab.</div>
+                            </div>
+                        </div>
+                        {% elif record.risk_level == 'moderate' %}
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-calendar-alt text-warning mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Routine Monitoring</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Schedule follow-up appointment in 1–3 months with primary care physician.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-person-running text-primary mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Lifestyle Changes</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">30 min aerobic exercise 5x/week. Mediterranean or DASH diet. Reduce sodium.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-chart-line text-success mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Track Vitals</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Monitor blood pressure and cholesterol monthly. Keep a health journal.</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-shield-check text-success mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Annual Screening</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Continue annual cardiovascular checkups. Maintain current healthy habits.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-apple-whole text-success mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Preventative Care</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Heart-healthy diet rich in fruits, vegetables, whole grains, and omega-3 fatty acids.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 rounded" style="background:var(--card-bg);border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-dumbbell text-primary mb-2"></i>
+                                <div class="fw-bold mb-1" style="font-size:0.9rem;color:var(--text-dark);">Stay Active</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">Maintain 150+ min/week moderate exercise. Include strength training 2x/week.</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- ━━━ Action Buttons ━━━ -->
+                <div class="d-flex flex-wrap gap-3 justify-content-center">
+                    <a href="{% url 'prediction:create' %}" class="btn btn-outline-primary btn-lg rounded-pill px-5 fw-bold">
+                        <i class="fa-solid fa-rotate-right me-2"></i>Run Another Assessment
+                    </a>
+                    <a href="{% url 'prediction:report' record.pk %}" class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg fw-bold">
+                        <i class="fa-solid fa-file-pdf me-2"></i>Download PDF Report
+                    </a>
+                    <a href="{% url 'prediction:export_csv' record.pk %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4 fw-bold">
+                        <i class="fa-solid fa-file-csv me-2"></i>Export CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-footer text-center py-3" style="background:transparent;border-top:1px solid var(--border-color);">
+                <small style="color:var(--text-muted);">
+                    Assessment ID: <strong>#{{ record.pk|stringformat:"04d" }}</strong> &bull; 
+                    Model: <strong>{{ record.model_name }}</strong> &bull; 
+                    Generated: {{ record.created_at|date:"F d, Y — H:i" }} &bull;
+                    <span class="text-danger">For informational purposes only</span>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

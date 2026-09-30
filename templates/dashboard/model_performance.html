@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Model Performance - CardioAI{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-5" data-aos="fade-down">
+    <div>
+        <div class="glass-pill mb-3"><i class="fa-solid fa-brain"></i> Model Intelligence</div>
+        <h2 class="mb-1 fw-bold gradient-text" style="font-size:2rem;">ML Model Performance</h2>
+        <p style="color:var(--text-muted);">Comparative evaluation of all trained machine learning models</p>
+    </div>
+</div>
+
+<!-- Best Model Card -->
+<div class="row mb-5" data-aos="fade-up">
+    <div class="col-12">
+        <div class="card" style="background:linear-gradient(135deg,#4F46E5,#7C3AED) !important;border:none !important;color:white;">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div style="background:rgba(255,255,255,0.15);display:inline-block;padding:4px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;margin-bottom:12px;">
+                            <i class="fa-solid fa-trophy me-1"></i> BEST MODEL SELECTED
+                        </div>
+                        <h3 class="fw-bold mb-1">{{ selected_model }}</h3>
+                        <p style="opacity:0.85;margin-bottom:0;">Automatically selected based on highest cross-validation accuracy across 5 folds</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="row text-center">
+                            <div class="col-6 mb-2">
+                                <div style="font-size:2rem;font-weight:800;">{{ best_accuracy }}%</div>
+                                <div style="opacity:0.8;font-size:0.8rem;">Accuracy</div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div style="font-size:2rem;font-weight:800;">{{ best_f1 }}%</div>
+                                <div style="opacity:0.8;font-size:0.8rem;">F1 Score</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model Comparison Table -->
+<div class="row mb-5">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-table text-primary me-2"></i>Model Comparison Table</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-4">Model</th>
+                                <th>Accuracy</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                                <th>F1 Score</th>
+                                <th>CV Accuracy</th>
+                                <th class="px-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in all_models %}
+                            <tr {% if model.name == selected_model %}style="background:rgba(79,70,229,0.05)!important;"{% endif %}>
+                                <td class="px-4 fw-bold" style="color:var(--text-dark);">
+                                    {% if model.name == selected_model %}
+                                        <i class="fa-solid fa-trophy text-warning me-2"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-robot text-muted me-2"></i>
+                                    {% endif %}
+                                    {{ model.name }}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height:6px;border-radius:10px;max-width:80px;">
+                                            <div class="progress-bar" style="width:{{ model.accuracy_pct }}%;background:var(--primary-gradient);border-radius:10px;"></div>
+                                        </div>
+                                        <span class="fw-bold" style="font-size:0.85rem;">{{ model.accuracy }}%</span>
+                                    </div>
+                                </td>
+                                <td><span class="fw-bold">{{ model.precision }}%</span></td>
+                                <td><span class="fw-bold">{{ model.recall }}%</span></td>
+                                <td><span class="fw-bold">{{ model.f1 }}%</span></td>
+                                <td><span class="fw-bold" style="color:var(--primary);">{{ model.cv_accuracy }}%</span></td>
+                                <td class="px-4">
+                                    {% if model.name == selected_model %}
+                                        <span class="badge" style="background:rgba(79,70,229,0.1);color:var(--primary);border:1px solid rgba(79,70,229,0.3);">
+                                            <i class="fa-solid fa-star me-1"></i>Active
+                                        </span>
+                                    {% else %}
+                                        <span class="badge" style="background:var(--bg-secondary);color:var(--text-muted);border:1px solid var(--border-color);">
+                                            Trained
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Charts -->
+<div class="row mb-4">
+    <div class="col-lg-7" data-aos="fade-right">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-chart-bar text-primary me-2"></i>Model Accuracy Comparison</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container">
+                    <canvas id="modelCompareChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5" data-aos="fade-left">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-radar text-success me-2"></i>Metrics Radar — Best Model</h6>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center p-4">
+                <div style="max-width:280px;width:100%;">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ROC Curve Info -->
+<div class="row mb-4">
+    <div class="col-lg-6" data-aos="fade-right">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-chart-line text-warning me-2"></i>ROC Curves</h6>
+            </div>
+            <div class="card-body text-center p-4">
+                <img src="{% static 'charts/roc_curves.png' %}" class="img-fluid rounded"
+                     alt="ROC Curves" style="max-height:300px;"
+                     onerror="this.parentElement.innerHTML='<div class=\'py-5\'><i class=\'fa-solid fa-chart-line fa-4x mb-3\' style=\'opacity:0.2;color:var(--warning)\'></i><p style=\'color:var(--text-muted)\'>Run <code>python train_model.py</code> to generate ROC curves</p></div>'">
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6" data-aos="fade-left">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-grid-2 text-danger me-2"></i>Confusion Matrix</h6>
+            </div>
+            <div class="card-body text-center p-4">
+                <img src="{% static 'charts/confusion_matrix.png' %}" class="img-fluid rounded"
+                     alt="Confusion Matrix" style="max-height:300px;"
+                     onerror="this.parentElement.innerHTML='<div class=\'py-5\'><i class=\'fa-solid fa-grid-2 fa-4x mb-3\' style=\'opacity:0.2;color:var(--danger)\'></i><p style=\'color:var(--text-muted)\'>Run <code>python train_model.py</code> to generate confusion matrix</p></div>'">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Metric Explanations -->
+<div class="row mb-4" data-aos="fade-up">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 fw-bold"><i class="fa-solid fa-book-medical text-primary me-2"></i>Understanding the Metrics</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <div class="p-3 rounded" style="background:rgba(79,70,229,0.07);border:1px solid rgba(79,70,229,0.15);">
+                            <i class="fa-solid fa-bullseye fa-2x text-primary mb-2"></i>
+                            <h6 class="fw-bold">Accuracy</h6>
+                            <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:0;">
+                                Percentage of all predictions that were correct. <strong>Overall correctness.</strong>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded" style="background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.15);">
+                            <i class="fa-solid fa-magnifying-glass fa-2x text-success mb-2"></i>
+                            <h6 class="fw-bold">Precision</h6>
+                            <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:0;">
+                                Of patients predicted positive, how many actually had heart disease? Reduces <strong>false alarms.</strong>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded" style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.15);">
+                            <i class="fa-solid fa-magnifying-glass-chart fa-2x text-warning mb-2"></i>
+                            <h6 class="fw-bold">Recall</h6>
+                            <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:0;">
+                                Of patients who actually had disease, how many did we catch? Critical in healthcare — reduces <strong>missed cases.</strong>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded" style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);">
+                            <i class="fa-solid fa-star fa-2x text-danger mb-2"></i>
+                            <h6 class="fw-bold">F1 Score</h6>
+                            <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:0;">
+                                Harmonic mean of Precision and Recall. Best <strong>balance metric</strong> for imbalanced medical datasets.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+AOS.init({ duration: 700, once: true });
+Chart.defaults.font.family = 'Outfit';
+
+const modelNames = {{ model_names_json|safe }};
+const accuracies = {{ accuracies_json|safe }};
+const f1Scores = {{ f1_json|safe }};
+const recalls = {{ recalls_json|safe }};
+
+// Model Comparison Bar Chart
+const modelColors = modelNames.map((n, i) => 
+    n === '{{ selected_model }}' ? 'rgba(79,70,229,0.85)' : 'rgba(79,70,229,0.3)'
+);
+new Chart(document.getElementById('modelCompareChart'), {
+    type: 'bar',
+    data: {
+        labels: modelNames,
+        datasets: [
+            { label: 'Accuracy %', data: accuracies, backgroundColor: modelColors, borderRadius: 6 },
+            { label: 'F1 Score %', data: f1Scores, backgroundColor: 'rgba(16,185,129,0.6)', borderRadius: 6 }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: { grid: { display: false }, ticks: { font: { family:'Outfit',size:10 } } },
+            y: { min: 0, max: 100, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { family:'Outfit' }, callback: v => v + '%' } }
+        },
+        plugins: { legend: { labels: { font: { family:'Outfit',size:12 }, usePointStyle: true } } },
+        animation: { duration: 1200 }
+    }
+});
+
+// Radar Chart for best model
+new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: {
+        labels: ['Accuracy', 'Precision', 'Recall', 'F1 Score', 'CV Score'],
+        datasets: [{
+            label: '{{ selected_model }}',
+            data: [{{ best_accuracy }}, {{ best_precision }}, {{ best_recall }}, {{ best_f1 }}, {{ best_cv }}],
+            borderColor: 'rgba(79,70,229,0.9)',
+            backgroundColor: 'rgba(79,70,229,0.15)',
+            borderWidth: 2,
+            pointBackgroundColor: '#4F46E5',
+            pointRadius: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            r: {
+                min: 0, max: 100,
+                ticks: { stepSize: 20, font: { family:'Outfit',size:10 } },
+                pointLabels: { font: { family:'Outfit',size:11 } },
+                grid: { color: 'rgba(0,0,0,0.08)' },
+                angleLines: { color: 'rgba(0,0,0,0.08)' }
+            }
+        },
+        plugins: { legend: { labels: { font: { family:'Outfit',size:12 } } } }
+    }
+});
+</script>
+{% endblock %}
